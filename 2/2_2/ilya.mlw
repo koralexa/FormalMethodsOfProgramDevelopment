@@ -1,0 +1,105 @@
+module Set
+
+  type set 'a
+
+  predicate mem 'a (set 'a)
+
+  constant empty : set 'a
+
+  predicate is_empty (s: set 'a) = forall x: 'a. not (mem x s)
+
+  axiom empty_def1: is_empty (empty : set 'a)
+
+  lemma mem_empty: forall x:'a. mem x empty <-> false
+
+  function add 'a (set 'a) : set 'a
+
+  axiom add_def1:
+    forall x y: 'a. forall s: set 'a.
+    mem x (add y s) <-> x = y \/ mem x s
+
+  function remove 'a (set 'a) : set 'a
+
+  axiom remove_def1:
+    forall x y : 'a, s : set 'a.
+    mem x (remove y s) <-> x <> y /\ mem x s
+end
+
+module PrimeNumberSieve
+
+use import ref.Ref
+use import Set
+use import int.Int
+use import int.EuclideanDivision
+
+    function length (s: set 'a) : int
+
+    predicate prime (p: int) =
+        2 <= p /\ forall n: int. 1 < n < p -> mod p n <> 0
+
+    axiom len_min:
+        forall s : set 'a.
+            length s >= 0
+    
+    axiom len_add:
+        forall s : set 'a, x : 'a.
+            not (mem x s) -> length (add x s) = (length s) + 1
+
+    val length (s : set 'a) : int
+        ensures {result = length s}
+
+    predicate subset_new (s1 s2: set 'a) = forall x : 'a. mem x s1 -> mem x s2
+
+    axiom length_subset:
+    forall s1 s2: set 'a.
+        subset_new s1 s2 -> length s1 <= length s2
+
+    function filterSieve (n: int) (m: int) (s: set int): set int
+
+    axiom filterSieveCheck1: 
+    forall x n m: int, s: set int. (n <= m) /\ (x <= m) /\ (mem x s /\ (mod n x = 0) -> not (mem x (filterSieve n m s)) /\ (mem x s)) 
+
+    axiom filterSieveCheck2: 
+    forall x n m: int, s: set int. (n <= m) /\ (x <= m)  
+    /\ (mem x s /\ not (mod n x = 0)  ->  mem x (filterSieve n m s) /\ (mem x s)) 
+
+    function min_set (s: set int) : int
+
+    axiom min_set_def:
+    forall s: set int. not (is_empty s) ->
+    mem (min_set s) s /\ forall x. mem x s -> min_set s <= x /\ prime(min_set s)    
+    
+    axiom sieve_length:
+        forall n m: int, s: set int.
+            length (filterSieve n m s) <= length s
+
+    axiom subset_sieve:
+    forall s: set int, n m: int.
+        subset_new (filterSieve n m s) s
+
+    function interval_new (l r: int) : set int
+
+    axiom interval_def:
+    forall l r x. 
+        mem x (interval_new l r) <-> l <= x < r
+
+    let primes (m: int): set int
+        ensures { forall n: int. prime n /\ n < m <-> mem n result }
+    = let nums = ref (interval_new 2 m) in
+        let primes = ref empty in
+        let old_nums = ref (interval_new 2 m) in
+        while not (is_empty !nums) do
+            invariant { forall n k: int. mem n !nums /\ 2 <= k <= m /\ (mod n k = 0)  -> mem k !old_nums }
+            invariant { forall n: int. prime n /\ n < m -> (mem n !nums \/ mem n !primes) }
+            invariant { forall n: int. mem n !primes -> n < m }
+            invariant { forall n: int. mem n !primes -> prime n }
+            invariant { forall n: int. mem n !nums -> 2 <= n < m }
+            variant { length !nums }
+            let p = min_set !nums in
+            assert { subset_new (add p (filterSieve p m !nums)) !nums };
+            primes := add p !primes;
+            nums := filterSieve p m !nums;
+        done;
+        !primes
+
+end

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE why3session PUBLIC "-//Why3//proof session v5//EN"
+"http://why3.lri.fr/why3session.dtd">
+<why3session shape_version="4">
+<prover id="0" name="CVC4" version="1.7" timelimit="5" steplimit="0" memlimit="1000"/>
+<file name="../theories.why" expanded="true">
+<theory name="Task_1_3" sum="b45af3e51371fe5cd4011d0d70b9cf1b" expanded="true">
+ <goal name="W_is_fund" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.01" steps="872"/></proof>
+ </goal>
+ <goal name="S_A_ver" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.01" steps="1402"/></proof>
+ </goal>
+ <goal name="A_T_A_ver" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.01" steps="1973"/></proof>
+ </goal>
+ <goal name="A_FT_A_ver" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.02" steps="5475"/></proof>
+ </goal>
+ <goal name="U_is_correct" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.05" steps="19180"/></proof>
+ </goal>
+ <goal name="A_T_A" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.02" steps="1934"/></proof>
+ </goal>
+ <goal name="A_FT_A" expl="" expanded="true">
+ <proof prover="0"><result status="valid" time="0.03" steps="5347"/></proof>
+ </goal>
+</theory>
+</file>
+</why3session>

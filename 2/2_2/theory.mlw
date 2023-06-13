@@ -1,0 +1,115 @@
+module SetVerification
+  use import ref.Ref
+  use import int.Int
+  
+  type set 'a
+
+  constant empty : set 'a
+
+  predicate in_set (self : set 'a) (item : 'a)
+
+  function len (self : set 'a) : int
+
+  function add (self : set 'a) (item : 'a) : set 'a
+
+  function delete (self : set 'a) (item : 'a) : set 'a
+
+  axiom new_in:
+    forall item : 'a, s : set 'a.
+      (s = empty) -> ((in_set s item) <-> false)
+
+  axiom add_in:
+    forall s : set 'a, item, item2 : 'a.
+      (in_set (add s item) item)
+      &&
+      ((item <> item2) -> ((in_set (add s item) item2) <-> (in_set s item2)))
+
+  axiom delete_in:
+    forall s : set 'a, item, item2 : 'a.
+      (not (in_set (delete s item) item))
+      &&
+      ((item <> item2) -> ((in_set (delete s item) item2) <-> (in_set s item2)))
+
+  axiom new_len:
+    forall s : set 'a.
+      (s = empty) -> ((len s) = 0)
+
+  axiom add_len:
+    forall item : 'a, s: set 'a.
+      ((in_set s item) -> ((len s) = (len (add s item))))
+      &&
+      ((not (in_set s item)) -> ((len s) + 1 = (len (add s item))))
+
+  axiom delete_len:
+    forall item : 'a, s: set 'a.
+      (len (delete s item)) = (len s) - 1
+
+  val len (self : set 'a) : int
+    ensures {result = (len self)}
+
+  val add (self : ref (set 'a)) (item : 'a) : unit
+    ensures {!self = (add (old !self) item)}
+
+  val delete (self : ref (set 'a)) (item : 'a) : unit
+    requires {in_set !self item}
+    ensures {!self = (delete (old !self) item)}
+
+end
+
+module SetIntVerification
+  use import SetVerification
+  use import int.Int
+
+  function set_int_range (a : int) (b : int) : set int
+
+  val set_int_range (a : int) (b : int) : set int
+    requires {0 <= a <= b}
+    ensures {result = (set_int_range a b)}
+    ensures {forall x : int. (a <= x <= b) <-> (in_set result x)}
+
+end
+
+module EratosthenesSieve
+  use import int.Int
+  use import ref.Ref
+  use import SetVerification
+  use import SetIntVerification
+  use import number.Divisibility
+
+  predicate all_less (s : set int) (n : int) =
+    forall x : int.
+      (in_set s x) -> (2 <= x <= n)
+
+  predicate all_prime (s : set int) (n : int) =
+    forall x : int.
+      (2 <= x <= n) 
+      -> 
+      ((in_set s x) <-> (forall y : int. (1 < y < x) -> not (divides y x)))
+
+  let prime_numbers (n : int) : set int
+    requires {n >= 2}
+    ensures {all_less result n}
+    ensures {all_prime result n}
+  =
+    let p = ref 2 in
+    let s = ref (set_int_range 2 n) in
+    let i = ref (!p + 1) in
+    while !i <= n do
+      if (in_set !s !i) && (divides !p !i) then (delete s !i);
+    done;
+    while !p < n do
+      invariant {!p >= 2}
+      invariant {all_prime !s !p}
+      variant {n - !p}
+      p := !p + 1;
+      while not (in_set !s !p) && (!p < n) do
+        p := !p + 1;
+      done;
+      let i = ref (!p + 1) in
+      while !i <= n do
+        if (in_set !s !i) && (divides !p !i) then (delete s !i);
+      done;
+    done;
+    !s;
+
+end

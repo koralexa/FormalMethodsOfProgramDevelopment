@@ -1,0 +1,27 @@
+theory Task_1_2
+  use import int.Int
+
+  (* Индуктивное утверждение *)
+  predicate p_a (x: int) (y1: int) (y2: int) (y3: int) = 
+    (y1 * y1 * y1 <= x) /\
+    (y2 = (y1 + 1) * (y1 + 1) * (y1 + 1)) /\
+    (y3 = y2 - y1 * y1 * y1)
+
+  (* Предусловие *)
+  predicate phi (x: int) = (x >= 0)
+
+  (* Постусловие *)
+  predicate psi (x: int) (z: int) = (z * z * z <= x /\ x < (z + 1) * (z + 1) * (z + 1))
+
+  goal S_to_A: forall x y1 y2 y3:int.
+    (phi x) -> (p_a x 0 1 1)
+
+  goal A_to_A: forall x y1 y2 y3:int.
+    ((phi x) /\ (p_a x y1 y2 y3) /\ (y2 <= x))
+    ->
+    (p_a x (y1 + 1) (y2 + y3 + 6 * y1 + 6) (y3 + 6 * y1 + 6))
+
+  goal A_to_H: forall x y1 y2 y3:int.
+    ((phi x) /\ (p_a x y1 y2 y3) /\ (y2 > x)) -> (psi x y1)
+
+end

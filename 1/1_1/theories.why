@@ -1,0 +1,66 @@
+(*
+  P1 и T2 не находятся в отношении полной корректности, так как при 
+  x1 = -2^31, x2 = 2^31-1, x3 = 1 предусловие истинно, но блок-схема зацикливается,
+  так как x1 - x3 < -2^31
+*)
+
+theory Task_1_1
+  use import int.Int
+
+  (* предусловие Т1 *)
+  predicate phi_1 (x1: int) (x2: int) (x3: int) =
+    (x1 >= -2147483648 /\ x1 <= 2147483647 /\ 
+    x2 >= -2147483648 /\ x2 <= 2147483647 /\ 
+    x3 >= -2147483648 /\ x3 <= 2147483647 /\
+    x1 - x3 >= -2147483648 /\ x1 - x3 <= 2147483647 /\ 
+    x1 + x2 - x3 >= -2147483648 /\ x1 + x2 - x3 <= 2147483647)
+
+  (* постусловие Т1 *)
+  predicate psi_1 (x1: int) (x2: int) (x3: int) (z: int) =
+    (x1 - x3 + x2 = z)
+
+  (* предусловие Т2 *)
+  predicate phi_2 (x1: int) (x2: int) (x3: int) =
+    (x1 >= -2147483648 /\ x1 <= 2147483647 /\ 
+    x2 >= -2147483648 /\ x2 <= 2147483647 /\ 
+    x3 >= -2147483648 /\ x3 <= 2147483647 /\
+    x1 + x2 - x3 >= -2147483648 /\ x1 + x2 - x3 <= 2147483647)
+
+  (* постусловие Т2 *)
+  predicate psi_2 (x1: int) (x2: int) (x3: int) (z: int) =
+    (x1 - x3 + x2 = z)
+
+  (* завершаемость M[P1](x) <> omega *)
+  predicate completion_1 (x1: int) (x2: int) (x3: int) = 
+    (x1 - x3 >= -2147483648 /\ x1 - x3 <= 2147483647 /\ 
+    x1 + x2 - x3 >= -2147483648 /\ x1 + x2 - x3 <= 2147483647)
+
+  (* завершаемость M[P2](x) <> omega *)
+  predicate completion_2 (x1: int) (x2: int) (x3: int) = 
+    (x1 + x2 - x3 >= -2147483648 /\ x1 + x2 - x3 <= 2147483647 /\
+    (((x1 >= 0) = (x3 >= 0) /\ x1 - x3 >= -2147483648 /\ x1 - x3 <= 2147483647) \/
+    (not((x1 >= 0) = (x3 >= 0)) /\ not((x1 >= 0) = (x2 >= 0)) /\ x1 + x2 >= -2147483648 /\ x1 + x2 <= 2147483647) \/
+    (not((x1 >= 0) = (x3 >= 0)) /\ (x1 >= 0) = (x2 >= 0) /\ x2 - x3 >= -2147483648 /\ x2 - x3 <= 2147483647)))
+
+  goal P1_T1_PartCorrectness: forall x1 x2 x3:int. 
+    ((phi_1 x1 x2 x3) /\ (completion_1 x1 x2 x3)) -> (psi_1 x1 x2 x3 (x1 - x3 + x2))
+ 
+  goal P2_T1_PartCorrectness: forall x1 x2 x3:int. 
+    ((phi_1 x1 x2 x3) /\ (completion_2 x1 x2 x3)) -> (psi_1 x1 x2 x3 (x1 - x3 + x2))
+
+  goal P1_T2_PartCorrectness: forall x1 x2 x3:int. 
+    ((phi_2 x1 x2 x3) /\ (completion_1 x1 x2 x3)) -> (psi_2 x1 x2 x3 (x1 - x3 + x2))
+
+  goal P2_T2_PartCorrectness: forall x1 x2 x3:int. 
+    ((phi_2 x1 x2 x3) /\ (completion_2 x1 x2 x3)) -> (psi_2 x1 x2 x3 (x1 - x3 + x2))
+
+  goal P1_T1_FullCorrectness: forall x1 x2 x3:int. 
+    (phi_1 x1 x2 x3) -> ((completion_1 x1 x2 x3) /\ (psi_1 x1 x2 x3 (x1 - x3 + x2)))
+ 
+  goal P2_T1_FullCorrectness: forall x1 x2 x3:int. 
+    (phi_1 x1 x2 x3) -> ((completion_2 x1 x2 x3) /\ (psi_1 x1 x2 x3 (x1 - x3 + x2)))
+
+  goal P2_T2_FullCorrectness: forall x1 x2 x3:int. 
+    (phi_2 x1 x2 x3) -> ((completion_2 x1 x2 x3) /\ (psi_2 x1 x2 x3 (x1 - x3 + x2)))
+end
+

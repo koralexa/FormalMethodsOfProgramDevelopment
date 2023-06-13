@@ -1,0 +1,99 @@
+theory Sem_5
+  use import int.Int
+
+  function sqrt (x : int) : int
+
+  (* аксиома задает множество моделей, то есть множество допустимых функций
+  их бесконечно много потому что на отрицательных числах могут быть любые значения *)
+  axiom sqrt_def: 
+    forall x: int.
+      let r = sqrt x in
+      (x >= 0) 
+      -> 
+      (r * r <= x < (r + 1) * (r + 1))
+
+  (* Предусловие *)
+  predicate phi (x: int) = (x >= 0)
+
+  predicate psi (x z: int) = z * z <= x <= (z + 1) * (z + 1)
+
+  predicate phi_div (x1 x2: int) = x1 >= 0 /\ x2 > 0
+
+  predicate psi_div (x1 x2 z: int) = 0 <= x1 - z * x2 < x2
+
+  (* Индуктивное утверждение *)
+  predicate q (x: int) (y1: int) (y2: int) =
+    (x <> 0 -> (y2 > 0 /\ y1 >= 0)) /\ (x = 0 -> (y1 = y2 = 0))
+
+  predicate p2 (x y1 y2: int) = 
+    ((y2 >= y1 -> y1 = sqrt x) /\ (q x y1 y2) /\ y2 >= sqrt x)
+
+  predicate p (x y1 y2: int) = 
+    ((y2 >= y1 -> y1 = sqrt x) /\ (q x y1 y2) /\ y2 >= sqrt x)
+
+  predicate x_in_W (x: int) = (x >= 0)
+
+  (* Условие корректности выбора оценочной функции *)
+  goal U_is_correct: forall x y1 y2: int.
+    ((phi x) /\ (p x y1 y2)) 
+    -> 
+    (y1 >= 0)
+
+  (* Условия завершаемости *)
+
+  goal Cycle: forall x y1 y2 r1 r2: int.
+    ((phi x) /\ (p x y1 y2) /\ y2 < y1 /\ (psi_div x y2 r1) /\ (psi_div x y2 r1) /\
+    (psi_div (r1 + y2) 2 r2)) 
+    -> (y2 < y1)
+
+  goal First_div_cor: forall x y1 y2 : int.
+    x >= 0 && (p x y1 y2) && y2 < y1 -> (phi_div x y2)
+
+  goal Second_div_corr: forall x y1 y2 r1: int.
+    ((phi x) /\ (p x y1 y2) /\ y2 < y1 /\ (psi_div x y2 r1))
+    ->
+    (phi_div (r1 + y2) 2)
+
+  (* Условия верификации *)
+
+  (* смотри схему для L111 и L112 в записях, блок схема для корня*)
+  lemma L111: forall x r : int.
+    x = 0 -> r = 0
+
+  lemma L112: forall x r : int.
+    x >= 0
+
+  lemma L11: forall x: int.
+    (phi x) -> (exists r : int. (r * r <= x < (r + 1) * (r + 1)))
+
+  lemma L12: forall x r1 r: int.
+    (phi x) /\ (psi_div (x + 1) 2 r1) /\ (r * r <= x < (r + 1) * (r + 1))-> (exists r : int. (r1 >= x -> x = r))
+
+  lemma L1: forall x r1: int.
+    (phi x) /\ (psi_div (x + 1) 2 r1) -> (exists r: int. (r * r <= x < (r + 1) * (r + 1)) /\ (r1 >= x -> x = r))
+
+  lemma L2: forall x r1: int.
+    (phi x) /\ (psi_div (x + 1) 2 r1) -> (exists r: int. (r * r <= x < (r + 1) * (r + 1)) /\ (q x x r1))
+
+  lemma L3: forall x r1: int.
+    (phi x) /\ (psi_div (x + 1) 2 r1) -> (exists r: int. (r * r <= x < (r + 1) * (r + 1)) /\ (r1 >= r))
+
+  goal S_A: forall x r1: int.
+    (phi x) /\ (psi_div (x + 1) 2 r1) -> (p x x r1)
+
+  goal A_A: forall x y1 y2 r1 r2: int.
+    ((phi x) /\ (p x y1 y2) /\ y2 < y1 /\ (psi_div x y2 r1) /\ (psi_div (r1 + y2) 2 r2))
+    ->
+    (p x y2 r2)
+
+  goal S_DIV: forall x: int.
+    (phi x) -> (phi_div (x + 1) 2)
+
+  (* Частичная корректность *)
+
+  goal A_H_corr: forall x y1 y2: int.
+    ((phi x) /\ (p x y1 y2) /\ y2 >= y1)
+    ->
+    (y1 * y1 <= x < (y1 + 1) * (y1 + 1))
+
+end
